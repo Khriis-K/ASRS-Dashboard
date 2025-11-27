@@ -122,12 +122,6 @@ The app will open at `http://localhost:3000`
 - **Cardinal** (accent): `#990000`
 - **Background**: `#F5F7FA`
 
-## Research Team
-
-- Professor Allen Bolourchi
-- Professor Reza Jafarkhani
-- Professor Najmedin Meshkati
-
 ## Data Source
 
 NASA Aviation Safety Reporting System (ASRS) - https://asrs.arc.nasa.gov/
@@ -135,7 +129,3 @@ NASA Aviation Safety Reporting System (ASRS) - https://asrs.arc.nasa.gov/
 ## Disclaimer
 
 This analytical tool is developed for academic research purposes at USC Viterbi School of Engineering and is not intended as an operational safety system.
-
-## License
-
-© 2025 University of Southern California. All rights reserved.
