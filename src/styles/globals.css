@@ -5,6 +5,8 @@
     --color-electric-cyan: #00d9ff;
     --color-amber: #ff9500;
     --color-midnight: #0a0e27;
+    --color-navy: #002E5D;
+    --color-cardinal: #990000;
   }
 
   * {
@@ -19,10 +21,12 @@
 
   h1 {
     @apply scroll-m-20 text-6xl font-extrabold tracking-tight lg:text-7xl;
+    font-family: 'Georgia', 'Times New Roman', serif;
   }
 
   h2 {
     @apply scroll-m-20 text-4xl font-bold tracking-tight;
+    font-family: 'Georgia', 'Times New Roman', serif;
   }
 
   h3 {
