@@ -5,12 +5,19 @@ import { LogoStrip } from './LogoStrip';
 import { MetricCard } from './landing/MetricCard';
 import { MethodologyCard } from './landing/MethodologyCard';
 import { Brain, TrendingUp, Radar, Search } from 'lucide-react';
+import { useSummary } from '@/api/hooks';
 
 interface LandingPageProps {
   onEnterDashboard: () => void;
 }
 
 export function LandingPage({ onEnterDashboard }: LandingPageProps) {
+  const { data: summary, loading } = useSummary();
+  
+  // Format metrics from API data
+  const totalIncidents = summary?.total_incidents?.toLocaleString() ?? '—';
+  const yearSpan = summary?.date_range?.span ? `${summary.date_range.span} Years` : '—';
+  const primaryRisk = summary?.primary_risk ?? '—';
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
       {/* Header & Navigation */}
@@ -71,9 +78,9 @@ export function LandingPage({ onEnterDashboard }: LandingPageProps) {
       {/* Executive Summary Metrics */}
       <section className="max-w-6xl mx-auto px-6 -mt-12 relative z-20">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MetricCard label="Total Incidents Analyzed" value="5,426" />
-          <MetricCard label="Longitudinal Scope" value="24 Years" />
-          <MetricCard label="Primary Risk Identified" value="Human Factors" highlight />
+          <MetricCard label="Total Incidents Analyzed" value={loading ? '...' : totalIncidents} />
+          <MetricCard label="Longitudinal Scope" value={loading ? '...' : yearSpan} />
+          <MetricCard label="Primary Risk Identified" value={loading ? '...' : primaryRisk} highlight />
         </div>
       </section>
 

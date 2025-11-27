@@ -11,6 +11,7 @@ from config import get_settings
 from routers import incidents
 from routers import topics
 from routers import trends
+from routers import incident_detail
 
 # Configure logging
 logging.basicConfig(
@@ -60,6 +61,7 @@ app.add_middleware(
 app.include_router(incidents.router)
 app.include_router(topics.router)
 app.include_router(trends.router)
+app.include_router(incident_detail.router)
 
 
 # Health check endpoint

@@ -16,6 +16,7 @@ import {
   fetchTrendKPIs,
   fetchTrendComparison,
   fetchEmergingPatterns,
+  fetchIncidentDetail,
   type TimelineResponse,
   type FactorsResponse,
   type IncidentsResponse,
@@ -28,6 +29,7 @@ import {
   type ComparisonResponse,
   type EmergingPatternsResponse,
   type TrendPeriodParams,
+  type IncidentDetailResponse,
 } from './client';
 
 // ============== Generic Hook State ==============
@@ -359,6 +361,37 @@ export function useEmergingPatterns(params?: {
       setLoading(false);
     }
   }, [params?.inferenceStart, params?.inferenceEnd, params?.limit]);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return { data, loading, error, refetch: fetch };
+}
+
+// ============== Incident Detail Hook ==============
+
+export function useIncidentDetail(acn: string): UseApiState<IncidentDetailResponse> {
+  const [data, setData] = useState<IncidentDetailResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!acn) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchIncidentDetail(acn);
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  }, [acn]);
 
   useEffect(() => {
     fetch();

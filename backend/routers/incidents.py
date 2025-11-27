@@ -17,6 +17,7 @@ from schemas.models import (
     Pagination,
     Risk,
     Severity,
+    SummaryResponse,
 )
 
 router = APIRouter(prefix="/api/incidents", tags=["incidents"])
@@ -223,4 +224,45 @@ async def get_incidents(
             total=total,
             total_pages=total_pages
         )
+    )
+
+
+@router.get("/summary", response_model=SummaryResponse)
+async def get_summary():
+    """
+    Get summary statistics for the landing page.
+    Returns total incidents, date range, and primary risk factor.
+    """
+    from datetime import datetime
+    
+    df = load_all_data()
+    
+    # Calculate total incidents
+    total_incidents = len(df)
+    
+    # Calculate year range
+    min_year = int(df["Year"].min()) if len(df) > 0 and pd.notna(df["Year"].min()) else 2001
+    max_year = int(df["Year"].max()) if len(df) > 0 and pd.notna(df["Year"].max()) else 2025
+    span = max_year - min_year + 1
+    
+    # Find primary risk factor (most common contributing factor)
+    factors_df = df[["contributing_factors"]].dropna()
+    factors_df["factor"] = factors_df["contributing_factors"].str.split("; ")
+    factors_df = factors_df.explode("factor")
+    factors_df["factor"] = factors_df["factor"].str.strip()
+    factors_df = factors_df[factors_df["factor"] != ""]
+    
+    primary_risk = "Unknown"
+    if len(factors_df) > 0:
+        primary_risk = factors_df["factor"].mode().iloc[0] if len(factors_df["factor"].mode()) > 0 else "Unknown"
+    
+    return SummaryResponse(
+        total_incidents=total_incidents,
+        date_range={
+            "start": min_year,
+            "end": max_year,
+            "span": span
+        },
+        primary_risk=primary_risk,
+        last_updated=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     )

@@ -3,6 +3,7 @@ import { Breadcrumbs } from './incident/Breadcrumbs';
 import { HeaderCard } from './incident/HeaderCard';
 import { NarrativeViewer } from './incident/NarrativeViewer';
 import { SimilarIncidents } from './incident/SimilarIncidents';
+import { useIncidentDetail } from '@/api/hooks';
 
 interface IncidentReportProps {
   onBackToHome: () => void;
@@ -11,51 +12,71 @@ interface IncidentReportProps {
 }
 
 export function IncidentReport({ onBackToHome, onBackToDashboard, acn }: IncidentReportProps) {
-  // Mock data for the incident report
-  const incidentData = {
-    acn: acn,
-    title: 'Runway Incursion at SFO (Taxiway B)',
-    severity: 'High' as const,
-    date: 'May 12, 2024',
-    time: '14:30 PDT',
-    aircraft: 'B737-800',
-    weather: 'VFR',
-    narrative: `During taxi operations at San Francisco International Airport (SFO), our aircraft inadvertently crossed the hold short line on Taxiway B while proceeding to Runway 28L for departure. At approximately 14:30 local time, we were instructed by Ground Control to "taxi to Runway 28L via Taxiway Bravo, hold short of Runway 28R."
+  const { data: response, loading, error } = useIncidentDetail(acn);
 
-As we approached the intersection, there was significant radio congestion on the Ground frequency with multiple aircraft taxiing simultaneously. The First Officer acknowledged the clearance, but due to the busy frequency and our focus on avoiding other ground traffic, we failed to completely stop at the hold short markings.
+  const incident = response?.incident;
+  // Map API snake_case to component camelCase
+  const similarIncidents = (response?.similar_incidents ?? []).map(si => ({
+    acn: si.acn,
+    location: si.location,
+    similarity: si.similarity,
+    matchReason: si.match_reason,
+  }));
 
-Tower immediately instructed us to stop our forward progress. We complied instantly and held position. An arriving aircraft on short final to Runway 28R was instructed to go around as a precautionary measure. Ground Control then provided revised taxi instructions, and we proceeded without further incident.
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F5F7FA]">
+        <Header onBackToHome={onBackToHome} />
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', onClick: onBackToDashboard },
+            { label: `ACN: ${acn}` },
+          ]}
+        />
+        <main className="p-8">
+          <div className="flex items-center justify-center h-[400px]">
+            <div className="animate-pulse text-gray-400 text-lg">Loading incident details...</div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-Contributing factors included radio congestion, complex taxi route, and possible crew distraction during a busy ground movement period. Weather was VFR with good visibility. No damage or injuries resulted from this incident. We have reviewed hold short procedures and implemented additional crew coordination protocols to prevent recurrence.`,
-    highlightedTerms: ['hold short', 'crossed', 'Runway 28R', 'Ground Control', 'clearance', 'taxi', 'Tower', 'radio congestion'],
-  };
+  if (error || !incident) {
+    return (
+      <div className="min-h-screen bg-[#F5F7FA]">
+        <Header onBackToHome={onBackToHome} />
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', onClick: onBackToDashboard },
+            { label: `ACN: ${acn}` },
+          ]}
+        />
+        <main className="p-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <p className="text-red-600 text-lg">
+              {error?.message || `Incident ${acn} not found`}
+            </p>
+            <button
+              onClick={onBackToDashboard}
+              className="mt-4 px-4 py-2 bg-[#002E5D] text-white rounded-lg hover:bg-[#001a3d]"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-  const similarIncidents = [
-    {
-      acn: '1845234',
-      location: 'LAX - Taxiway A',
-      similarity: 98,
-      matchReason: 'Pilot Misunderstood Tower Instructions During Taxi',
-    },
-    {
-      acn: '1842156',
-      location: 'JFK - Runway 4L/22R',
-      similarity: 95,
-      matchReason: 'Radio Congestion Led to Missed Hold Short',
-    },
-    {
-      acn: '1839874',
-      location: 'ORD - Taxiway M',
-      similarity: 92,
-      matchReason: 'Crew Distraction During Complex Ground Operations',
-    },
-    {
-      acn: '1837562',
-      location: 'DEN - Taxiway B',
-      similarity: 89,
-      matchReason: 'Similar Aircraft Type and Weather Conditions',
-    },
-  ];
+  // Format aircraft info for display
+  const aircraftDisplay = [
+    incident.aircraft.type,
+    incident.aircraft.operator,
+  ].filter(Boolean).join(' - ') || 'Unknown';
+
+  // Format weather info for display
+  const weatherDisplay = incident.weather.conditions || 'Unknown';
 
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
@@ -78,19 +99,19 @@ Contributing factors included radio congestion, complex taxi route, and possible
           <div className="space-y-6">
             {/* Header Card */}
             <HeaderCard
-              acn={incidentData.acn}
-              title={incidentData.title}
-              severity={incidentData.severity}
-              date={incidentData.date}
-              time={incidentData.time}
-              aircraft={incidentData.aircraft}
-              weather={incidentData.weather}
+              acn={incident.acn}
+              title={incident.title}
+              severity={incident.severity}
+              date={incident.date_formatted}
+              time={incident.time || 'Unknown'}
+              aircraft={aircraftDisplay}
+              weather={weatherDisplay}
             />
 
             {/* Narrative Viewer */}
             <NarrativeViewer
-              narrative={incidentData.narrative}
-              highlightedTerms={incidentData.highlightedTerms}
+              narrative={incident.narrative}
+              highlightedTerms={incident.highlighted_terms}
             />
           </div>
 

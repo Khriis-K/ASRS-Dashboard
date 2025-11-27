@@ -348,3 +348,62 @@ export async function fetchEmergingPatterns(params?: {
     limit: params?.limit,
   }));
 }
+
+// ============== Incident Detail Types ==============
+
+export interface IncidentLocation {
+  airport_code: string;
+  airport_name?: string;
+  taxiway?: string;
+  runway?: string;
+  state?: string;
+}
+
+export interface IncidentAircraft {
+  type: string;
+  operator?: string;
+  flight_phase?: string;
+}
+
+export interface IncidentWeather {
+  conditions: string;
+  visibility?: string;
+  ceiling?: string;
+}
+
+export interface IncidentDetail {
+  acn: string;
+  title: string;
+  severity: 'High' | 'Medium' | 'Low';
+  date: string;
+  date_formatted: string;
+  time?: string;
+  timezone?: string;
+  location: IncidentLocation;
+  aircraft: IncidentAircraft;
+  weather: IncidentWeather;
+  narrative: string;
+  highlighted_terms: string[];
+  contributing_factors: string[];
+}
+
+export interface SimilarIncident {
+  acn: string;
+  location: string;
+  similarity: number;
+  match_reason: string;
+}
+
+export interface IncidentDetailResponse {
+  incident: IncidentDetail;
+  similar_incidents: SimilarIncident[];
+}
+
+// ============== Incident Detail API Functions ==============
+
+/**
+ * Get full details for a specific incident.
+ */
+export async function fetchIncidentDetail(acn: string): Promise<IncidentDetailResponse> {
+  return fetchJson<IncidentDetailResponse>(buildUrl(`/incidents/${acn}`));
+}
