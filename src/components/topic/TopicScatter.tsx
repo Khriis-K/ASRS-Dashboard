@@ -1,23 +1,21 @@
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useTopics } from '@/api/hooks';
 
 interface TopicScatterProps {
   selectedTopic: number;
   onTopicSelect: (topic: number) => void;
+  model?: 'lda' | 'bert';
 }
 
-export function TopicScatter({ selectedTopic, onTopicSelect }: TopicScatterProps) {
-  const topics = [
-    { id: 1, x: 15, y: 65, size: 180, label: 'RWY Incursion' },
-    { id: 2, x: 45, y: 75, size: 150, label: 'Communication' },
-    { id: 3, x: 70, y: 60, size: 140, label: 'Clearance' },
-    { id: 4, x: 25, y: 35, size: 120, label: 'Taxi Error' },
-    { id: 5, x: 80, y: 25, size: 110, label: 'Hold Short' },
-    { id: 6, x: 55, y: 40, size: 100, label: 'Weather' },
-    { id: 7, x: 35, y: 55, size: 95, label: 'ATC' },
-    { id: 8, x: 60, y: 80, size: 85, label: 'Equipment' },
-    { id: 9, x: 85, y: 45, size: 75, label: 'Lighting' },
-    { id: 10, x: 40, y: 20, size: 70, label: 'Training' },
-  ];
+export function TopicScatter({ selectedTopic, onTopicSelect, model = 'lda' }: TopicScatterProps) {
+  const { data: response, loading, error } = useTopics({ model });
+  
+  const topics = response?.topics ?? [];
+  
+  // Calculate size range for bubble scaling
+  const sizes = topics.map(t => t.size);
+  const minSize = Math.min(...sizes, 50);
+  const maxSize = Math.max(...sizes, 500);
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -32,6 +30,31 @@ export function TopicScatter({ selectedTopic, onTopicSelect }: TopicScatterProps
     }
     return null;
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Topic Landscape</h3>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+        <div className="h-[500px] flex items-center justify-center">
+          <div className="animate-pulse text-gray-400">Loading topics...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Topic Landscape</h3>
+          <p className="text-red-600">Error: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 h-full">
@@ -58,6 +81,13 @@ export function TopicScatter({ selectedTopic, onTopicSelect }: TopicScatterProps
             domain={[0, 100]}
             stroke="#6b7280"
             label={{ value: 'Principal Component 2', angle: -90, position: 'insideLeft', style: { fill: '#6b7280' } }}
+          />
+          <ZAxis 
+            type="number" 
+            dataKey="size" 
+            domain={[minSize, maxSize]} 
+            range={[200, 1500]}
+            name="Documents"
           />
           <Tooltip content={<CustomTooltip />} />
           <Scatter 

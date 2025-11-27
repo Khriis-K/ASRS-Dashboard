@@ -12,7 +12,7 @@ interface TopicModelingProps {
 }
 
 export function TopicModeling({ onBackToHome, activeTab = 'topic', onTabChange }: TopicModelingProps) {
-  const [model, setModel] = useState('lda');
+  const [model, setModel] = useState<'lda' | 'bert'>('lda');
   const [numTopics, setNumTopics] = useState(10);
   const [selectedTopic, setSelectedTopic] = useState(1);
 
@@ -24,7 +24,7 @@ export function TopicModeling({ onBackToHome, activeTab = 'topic', onTabChange }
       {/* Control Bar */}
       <ControlBar
         model={model}
-        onModelChange={setModel}
+        onModelChange={(m) => setModel(m as 'lda' | 'bert')}
         numTopics={numTopics}
         onNumTopicsChange={setNumTopics}
       />
@@ -37,6 +37,7 @@ export function TopicModeling({ onBackToHome, activeTab = 'topic', onTabChange }
             <TopicScatter
               selectedTopic={selectedTopic}
               onTopicSelect={setSelectedTopic}
+              model={model}
             />
           </div>
 

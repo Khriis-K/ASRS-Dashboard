@@ -1,29 +1,19 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useTrendKPIs } from '@/api/hooks';
+import type { TrendDirection } from '@/api/client';
 
 export function DeltaKPIs() {
-  const kpis = [
-    {
-      title: 'Total Volume Change',
-      value: '+12%',
-      description: 'Report Frequency',
-      trend: 'neutral' as const,
-      icon: Minus,
-    },
-    {
-      title: 'Rising Risk',
-      value: '+18%',
-      description: 'Ground Communications',
-      trend: 'up' as const,
-      icon: TrendingUp,
-    },
-    {
-      title: 'Declining Risk',
-      value: '-5%',
-      description: 'Signage Visibility',
-      trend: 'down' as const,
-      icon: TrendingDown,
-    },
-  ];
+  const { data: response, loading, error } = useTrendKPIs();
+
+  const getIcon = (trend: TrendDirection) => {
+    switch (trend) {
+      case 'up': return TrendingUp;
+      case 'down': return TrendingDown;
+      default: return Minus;
+    }
+  };
+
+  const kpis = response?.kpis ?? [];
 
   const getCardStyles = (trend: string) => {
     switch (trend) {
@@ -54,11 +44,34 @@ export function DeltaKPIs() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-3 gap-6 mb-8">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
+            <div className="h-12 w-12 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-1"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+        <p className="text-red-600">Error loading KPIs: {error.message}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-3 gap-6 mb-8">
       {kpis.map((kpi) => {
         const styles = getCardStyles(kpi.trend);
-        const Icon = kpi.icon;
+        const Icon = getIcon(kpi.trend);
 
         return (
           <div

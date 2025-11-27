@@ -1,19 +1,14 @@
 import { ArrowUpDown, FileText } from 'lucide-react';
+import { useIncidents } from '@/api/hooks';
 
 interface ReportTableProps {
   onReportClick?: (acn: string) => void;
 }
 
 export function ReportTable({ onReportClick }: ReportTableProps) {
-  const reports = [
-    { acn: '1847562', date: '2024-05-12', location: 'SFO', type: 'Runway Incursion', severity: 'High' },
-    { acn: '1847521', date: '2024-05-11', location: 'LAX', type: 'Taxi Deviation', severity: 'Medium' },
-    { acn: '1847489', date: '2024-05-10', location: 'ORD', type: 'Communication Error', severity: 'Low' },
-    { acn: '1847453', date: '2024-05-09', location: 'ATL', type: 'Hold Short Violation', severity: 'High' },
-    { acn: '1847421', date: '2024-05-08', location: 'DFW', type: 'Clearance Confusion', severity: 'Medium' },
-    { acn: '1847389', date: '2024-05-07', location: 'DEN', type: 'Runway Incursion', severity: 'High' },
-    { acn: '1847356', date: '2024-05-06', location: 'JFK', type: 'ATC Miscommunication', severity: 'Medium' },
-  ];
+  const { data: response, loading, error } = useIncidents({ limit: 10 });
+
+  const reports = response?.reports ?? [];
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -27,6 +22,35 @@ export function ReportTable({ onReportClick }: ReportTableProps) {
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-[#002E5D] mb-1">Recent Incident Reports</h3>
+            <p className="text-gray-600 text-sm">Loading...</p>
+          </div>
+        </div>
+        <div className="h-[200px] flex items-center justify-center">
+          <div className="animate-pulse text-gray-400">Loading reports...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-[#002E5D] mb-1">Recent Incident Reports</h3>
+            <p className="text-red-600 text-sm">Error: {error.message}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

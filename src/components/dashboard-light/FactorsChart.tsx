@@ -1,13 +1,11 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useFactors } from '@/api/hooks';
 
 export function FactorsChart() {
-  const data = [
-    { factor: 'Situational Awareness', count: 487, risk: 'high' },
-    { factor: 'Communication', count: 412, risk: 'high' },
-    { factor: 'Procedure Adherence', count: 356, risk: 'medium' },
-    { factor: 'Weather Conditions', count: 298, risk: 'medium' },
-    { factor: 'Equipment Issues', count: 234, risk: 'low' },
-  ];
+  const { data: response, loading, error } = useFactors({ limit: 5 });
+
+  // Transform API response to chart format
+  const chartData = response?.factors ?? [];
 
   const getColor = (risk: string) => {
     switch (risk) {
@@ -18,6 +16,31 @@ export function FactorsChart() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Top Contributing Factors</h3>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+        <div className="h-[350px] flex items-center justify-center">
+          <div className="animate-pulse text-gray-400">Loading factors data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Top Contributing Factors</h3>
+          <p className="text-red-600">Error loading data: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       <div className="mb-6">
@@ -26,7 +49,7 @@ export function FactorsChart() {
       </div>
       
       <ResponsiveContainer width="100%" height={350}>
-        <BarChart data={data} layout="vertical">
+        <BarChart data={chartData} layout="vertical">
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis 
             type="number"
@@ -53,7 +76,7 @@ export function FactorsChart() {
             dataKey="count" 
             radius={[0, 4, 4, 0]}
           >
-            {data.map((entry, index) => (
+            {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getColor(entry.risk)} />
             ))}
           </Bar>

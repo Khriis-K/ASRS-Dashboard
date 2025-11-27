@@ -1,96 +1,16 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ArrowUp, ArrowDown } from 'lucide-react';
+import { useTrendComparison } from '@/api/hooks';
 
 interface ComparisonChartProps {
   view: 'factors' | 'topics';
 }
 
 export function ComparisonChart({ view }: ComparisonChartProps) {
-  const factorsData = [
-    {
-      category: 'Situational Awareness',
-      baseline: 18.5,
-      inference: 22.7,
-      variance: 4.2,
-    },
-    {
-      category: 'Ground Communications',
-      baseline: 15.2,
-      inference: 33.2,
-      variance: 18.0,
-    },
-    {
-      category: 'Ambiguous Clearance',
-      baseline: 22.1,
-      inference: 19.8,
-      variance: -2.3,
-    },
-    {
-      category: 'Distraction',
-      baseline: 12.3,
-      inference: 17.9,
-      variance: 5.6,
-    },
-    {
-      category: 'Signage Visibility',
-      baseline: 14.8,
-      inference: 9.8,
-      variance: -5.0,
-    },
-    {
-      category: 'Weather/Visibility',
-      baseline: 8.6,
-      inference: 7.2,
-      variance: -1.4,
-    },
-    {
-      category: 'Fatigue',
-      baseline: 8.5,
-      inference: 9.4,
-      variance: 0.9,
-    },
-  ];
-
-  const topicsData = [
-    {
-      category: 'RWY Incursion',
-      baseline: 25.4,
-      inference: 28.1,
-      variance: 2.7,
-    },
-    {
-      category: 'Communication',
-      baseline: 19.2,
-      inference: 24.5,
-      variance: 5.3,
-    },
-    {
-      category: 'Clearance Issues',
-      baseline: 18.7,
-      inference: 16.2,
-      variance: -2.5,
-    },
-    {
-      category: 'Taxi Errors',
-      baseline: 15.3,
-      inference: 18.9,
-      variance: 3.6,
-    },
-    {
-      category: 'Hold Short',
-      baseline: 12.8,
-      inference: 10.4,
-      variance: -2.4,
-    },
-    {
-      category: 'Equipment',
-      baseline: 8.6,
-      inference: 11.9,
-      variance: 3.3,
-    },
-  ];
-
-  const data = view === 'factors' ? factorsData : topicsData;
+  const { data: response, loading, error } = useTrendComparison({ view });
+  
+  const data = response?.data ?? [];
+  const periods = response?.periods ?? { baseline: '2012-2017', inference: '2018-2025' };
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -119,10 +39,36 @@ export function ComparisonChart({ view }: ComparisonChartProps) {
     return null;
   };
 
-  // Find the item with the greatest variance
-  const maxVarianceItem = data.reduce((prev, current) => 
-    Math.abs(current.variance) > Math.abs(prev.variance) ? current : prev
-  );
+  // Get greatest change from API response or calculate
+  const maxVarianceItem = response?.greatest_change ?? 
+    (data.length > 0 
+      ? data.reduce((prev, current) => Math.abs(current.variance) > Math.abs(prev.variance) ? current : prev)
+      : { category: 'N/A', variance: 0 });
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Comparative Risk Distribution</h3>
+          <p className="text-gray-600 text-sm">Loading...</p>
+        </div>
+        <div className="h-[450px] flex items-center justify-center">
+          <div className="animate-pulse text-gray-400">Loading comparison data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="mb-6">
+          <h3 className="text-[#002E5D] mb-2">Comparative Risk Distribution</h3>
+          <p className="text-red-600">Error: {error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -157,13 +103,13 @@ export function ComparisonChart({ view }: ComparisonChartProps) {
           <Bar 
             dataKey="baseline" 
             fill="#9ca3af" 
-            name="Baseline (2012-2017)"
+            name={`Baseline (${periods.baseline})`}
             radius={[0, 4, 4, 0]}
           />
           <Bar 
             dataKey="inference" 
             fill="#002E5D" 
-            name="Inference (2018-2025)"
+            name={`Inference (${periods.inference})`}
             radius={[0, 4, 4, 0]}
           />
         </BarChart>
