@@ -25,7 +25,7 @@ This full-stack application provides:
 - **Uvicorn** ASGI server
 
 ### Data
-- 5,400+ runway incursion reports from NASA ASRS (2001-2025)
+- 11K+ runway incursion reports from NASA ASRS (2001-2025)
 - Pre-trained LDA and BERTopic models
 - Sentence embeddings for semantic similarity
 
